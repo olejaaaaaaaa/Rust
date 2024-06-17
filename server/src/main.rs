@@ -1,56 +1,49 @@
 #![allow(warnings)]
 #![feature(ascii_char)]
 
-use std::thread;
+use std::ascii::Char;
+use std::sync::{Arc, Mutex};
+use std::thread::{self, JoinHandle};
 use std::net::{TcpListener, TcpStream, Shutdown};
-use std::io::{Read, Write, stdin};
+use std::io::{stdin, BufRead, BufReader, Error, Read, Write};
+use std::str;
 
 fn handle_client(mut stream: TcpStream) {
 
+    let mut buf = [0 as u8; 64];
 
+    stream.read(&mut buf);
 
-    let mut data = [0 as u8; 50]; // using 50 byte buffer
+    println!("buf: {:?}", buf);
 
-    while match stream.read(&mut data) {
-
-        Ok(size) => {
-            
-            for i in data.as_ascii().unwrap() {
-                if *i != '\0'.as_ascii().unwrap() {
-                    print!("{}", i);
-                }
-            }
-            true
-        },
-
-        Err(_) => {
-            println!("error connection to {}, terminated", stream.peer_addr().unwrap());
-            stream.shutdown(Shutdown::Both).unwrap();
-            false
-        }
-    } {}
 }
 
+
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
-    // accept connections and process them, spawning a new thread for each one
-    println!("Server listening on port 8080");
+    
+
+
+    let port: String = "8080".to_string();
+    let ip: String = "127.0.0.1".to_string();
+
+    let listener: Result<TcpListener, Error> = TcpListener::bind(ip + ":" + &port);
+
+    let listener: TcpListener = match listener { Ok(x) => { x }, Err(_) => { panic!("ERROR Create TcpListener") } };
+
     for stream in listener.incoming() {
+
         match stream {
             Ok(mut stream) => {
-                println!("connecting new user: {}", stream.peer_addr().unwrap());
 
-                thread::spawn(move|| {
-                    // connection succeeded
-                    handle_client(stream)
+                thread::spawn(move || {
+                    println!("{:?}", stream);
+                    handle_client(stream);
                 });
+
             }
             Err(e) => {
                 println!("Error: {}", e);
-                /* connection failed */
             }
         }
     }
-    // close the socket server
-    drop(listener);
 }
