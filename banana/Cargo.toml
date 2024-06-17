@@ -1,0 +1,13 @@
+[package]
+name = "banan"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+glium = "0.34.0"
+winit = "0.29.0"
+
+[profile.release]
+strip = "debuginfo"
+opt-level = "s"
+lto = true
